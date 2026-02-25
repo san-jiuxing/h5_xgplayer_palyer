@@ -45,7 +45,7 @@
         // 默认演示视频 URL
         const DEFAULT_URL = "//lf3-static.bytednsdoc.com/obj/eden-cn/nupenuvpxnuvo/xgplayer_doc/xgplayer-demo.mp4";
 		
-		let videoCache = JSON.parse(localStorage.getItem(".cache") || {});
+		let videoCache = JSON.parse(localStorage.getItem(".cache")) || {};
 		
 		// 保存视频进度
 		function saveVideoProgress(videoId, currentTime) {
@@ -102,7 +102,7 @@
                 "x5-video-player-fullscreen": "true",
                 download: true,
                 playbackRate: [0.5, 0.75, 1, 1.25, 1.5, 2, 3, 5],
-				defaultPlaybackRate: parseFloat(localStorage.getItem("currentRate") || 1),
+				defaultPlaybackRate: parseFloat(localStorage.getItem("currentRate")) || 1,
 				mobile:{
 					disablePress:false,
 					pressRate: 3
@@ -216,3 +216,4 @@
     </script>
 </body>
 </html>
+
