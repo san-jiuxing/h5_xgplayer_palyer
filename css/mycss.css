@@ -1,0 +1,114 @@
+/* 基础重置与背景 */
+html,
+body {
+	width: 100%;
+	min-height: 100vh;
+	margin: 0;
+	padding: 0;
+	background-color: #f5f7fa;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+/* 主容器 */
+.container {
+	width: 95%;
+	max-width: 860px;
+	background: #ffffff;
+	padding: 30px;
+	border-radius: 16px;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+	box-sizing: border-box;
+}
+
+/* 标题样式 */
+.header {
+	text-align: center;
+	margin: 0;
+	color: #1f2937;
+	font-size: 24px;
+	font-weight: 600;
+}
+
+/* 控制区：Label 和 组合输入框 */
+.control-panel {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.input-label {
+	font-size: 14px;
+	color: #4b5563;
+	font-weight: 500;
+}
+
+.input-group {
+	display: flex;
+	gap: 12px;
+	width: 100%;
+}
+
+.input-group input {
+	flex: 1;
+	padding: 14px 16px;
+	border: 1px solid #d1d5db;
+	border-radius: 8px;
+	font-size: 14px;
+	outline: none;
+	color: #374151;
+	transition: all 0.3s ease;
+	box-sizing: border-box;
+}
+
+.input-group input:focus {
+	border-color: #3b82f6;
+	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.input-group button {
+	padding: 0 28px;
+	background-color: #3b82f6;
+	color: #fff;
+	border: none;
+	border-radius: 8px;
+	cursor: pointer;
+	font-size: 15px;
+	font-weight: 600;
+	letter-spacing: 1px;
+	transition: all 0.2s ease;
+	white-space: nowrap;
+}
+
+.input-group button:hover {
+	background-color: #2563eb;
+}
+
+.input-group button:active {
+	transform: translateY(1px);
+}
+
+/* 错误提示文字 */
+.error-tip {
+	font-size: 13px;
+	color: #ef4444;
+	display: none;
+	/* 默认隐藏 */
+	margin-top: -4px;
+}
+
+/* 视频包裹层 */
+.player-wrapper {
+	width: 100%;
+	border-radius: 12px;
+	overflow: hidden;
+	background-color: #000;
+	aspect-ratio: 16 / 9;
+	/* 防止播放器未加载时高度塌陷 */
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}

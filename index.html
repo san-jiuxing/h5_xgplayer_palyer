@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,minimal-ui">
+    <meta name="referrer" content="no-referrer">
+    <title>xgplayer 网页播放器</title>
+	
+	<link rel="icon" href="./favicon.ico" />
+    
+    <link rel="stylesheet" href="./css/xgplayer.css" />
+	<link rel="stylesheet" href="./css/mycss.css" />
+    
+</head>
+<body>
+
+    <div class="container">
+        <h2 class="header">xgplayer 网页播放器</h2>
+
+        <div class="control-panel">
+            <label class="input-label" for="videoUrl">请输入视频流地址 (支持 .mp4 / .m3u8 / .flv)：</label>
+            <div class="input-group">
+                <input type="text" id="videoUrl" placeholder="https://..." />
+                <button id="playBtn">播放</button>
+            </div>
+            <span id="errorTip" class="error-tip"></span>
+        </div>
+
+        <div class="player-wrapper">
+            <div id="mse"></div>
+        </div>
+    </div>
+
+    <script charset="utf-8" src="./js/xgplayer.js"></script>
+    <script charset="utf-8" src="./js/xgplayer-flv.js"></script>
+    <script charset="utf-8" src="./js/xgplayer-hls.js"></script>
+
+    <script>
+        let player = null;
+        const videoUrlInput = document.getElementById('videoUrl');
+        const errorTip = document.getElementById('errorTip');
+        
+        // 默认演示视频 URL
+        const DEFAULT_URL = "//lf3-static.bytednsdoc.com/obj/eden-cn/nupenuvpxnuvo/xgplayer_doc/xgplayer-demo.mp4";
+
+        // 显示错误信息的小工具
+        function showError(message) {
+            errorTip.textContent = message;
+            errorTip.style.display = 'block';
+        }
+
+        // 隐藏错误信息
+        function hideError() {
+            errorTip.style.display = 'none';
+        }
+
+        function PlayVideo(VideoUrl) {
+            hideError();
+
+            if (player) {
+                player.destroy();
+                player = null;
+            }
+            
+            // 修复：使用传入的 VideoUrl，而不是重新去获取 DOM 里的值
+            const config = {
+                id: "mse",
+                url: VideoUrl, 
+                playsinline: true,
+                plugins: [],
+                fluid: true, 
+                "x5-video-player-type": "h5",
+                "x5-video-player-fullscreen": "true",
+                download: true,
+                playbackRate: [0.5, 0.75, 1, 1.25, 1.5, 2, 3, 5],
+                autoplay: false, // 既然是主动点击播放，直接开启自动播放体验更好
+                volume: 0.4
+            }
+            
+            // 修复：转为小写后再判断，防止出现 .MP4 或 .M3U8 导致判断失败
+            const lowerUrl = VideoUrl.toLowerCase();
+
+            if (lowerUrl.includes(".m3u8")) {
+                config.plugins.push(window.HlsPlayer);
+            } else if (lowerUrl.includes(".flv")) {
+                config.plugins.push(window.FlvPlayer);
+            } else if (!lowerUrl.includes(".mp4") && !lowerUrl.includes(".webm") && !lowerUrl.includes(".ogg")) {
+                // 如果既不是 m3u8/flv，也不是常见的原生格式，给出警告但仍然尝试播放
+                console.warn("未检测到常见视频后缀，将尝试使用原生 HTML5 播放");
+            }
+
+            try {
+                player = new Player(config);
+                // 播放成功后，将当前 URL 存入 localStorage
+                localStorage.setItem('saved_video_url', VideoUrl);
+            } catch (err) {
+                showError("播放器初始化失败，请检查视频地址是否有效。");
+                console.error(err);
+            }
+        }
+        
+        // --- 页面初始化与事件绑定 ---
+
+        // 页面加载时：尝试从 localStorage 读取上一次播放的 URL，如果没有就用默认的
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedUrl = localStorage.getItem('saved_video_url');
+            if (savedUrl) {
+                videoUrlInput.value = savedUrl;
+                PlayVideo(savedUrl);
+            } else {
+                videoUrlInput.value = DEFAULT_URL;
+                // 首次加载如果不希望它自动播放出声音吓到用户，可以不在此处调用 PlayVideo，
+                // 或者调用后将 autoplay 设置为 false
+                PlayVideo(DEFAULT_URL);
+            }
+        });
+
+        // 绑定“播放”按钮事件
+        const playBtn = document.getElementById('playBtn');
+
+        playBtn.addEventListener('click', () => {
+            const newUrl = videoUrlInput.value.trim();
+            if (newUrl) {
+                PlayVideo(newUrl);
+            } else {
+                showError('视频 URL 不能为空，请重新输入！');
+                videoUrlInput.focus();
+            }
+        });
+
+        // 在输入框内按回车键也能触发播放
+        videoUrlInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                playBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>
