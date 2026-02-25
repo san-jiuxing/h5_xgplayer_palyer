@@ -93,6 +93,14 @@
                 player = new Player(config);
                 // 播放成功后，将当前 URL 存入 localStorage
                 localStorage.setItem('saved_video_url', VideoUrl);
+				// 💡 核心修复 2：监听底层的 error 事件，统一捕获 403/跨域/解析失败
+				player.on('error', (err) => {
+					// 可以在控制台打印一下真实的错误原因，方便你调试
+					console.warn("播放器拦截到错误：", err);
+					
+					// 用我们自定义的 UI 提示用户，告别乱码！
+					showError("🛑 视频加载失败：该链接无访问权限(403)、存在防盗链或已失效。");
+				});
             } catch (err) {
                 showError("播放器初始化失败，请检查视频地址是否有效。");
                 console.error(err);
