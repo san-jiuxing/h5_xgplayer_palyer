@@ -34,6 +34,8 @@
     <script charset="utf-8" src="./js/xgplayer.js"></script>
     <script charset="utf-8" src="./js/xgplayer-flv.js"></script>
     <script charset="utf-8" src="./js/xgplayer-hls.js"></script>
+	
+	<script charset="utf-8" src="./js/md5.js"></script>
 
     <script>
         let player = null;
@@ -42,6 +44,17 @@
         
         // 默认演示视频 URL
         const DEFAULT_URL = "//lf3-static.bytednsdoc.com/obj/eden-cn/nupenuvpxnuvo/xgplayer_doc/xgplayer-demo.mp4";
+		
+		let videoCache = JSON.parse(localStorage.getItem(".cache") || {});
+		
+		// 保存视频进度
+		function saveVideoProgress(videoId, currentTime) {
+		  try {
+		    videoCache[videoId] = currentTime;
+		    localStorage.setItem('.cache', JSON.stringify(videoCache));
+		  } catch (e) {
+		  }
+		}
 
         // 显示错误信息的小工具
         function showError(message) {
@@ -53,6 +66,17 @@
         function hideError() {
             errorTip.style.display = 'none';
         }
+		
+		function formatTime(seconds) {
+		  const h = Math.floor(seconds / 3600);
+		  const m = Math.floor((seconds % 3600) / 60);
+		  const s = Math.floor(seconds % 60);
+		  
+		  if (h > 0) {
+		    return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+		  }
+		  return `${m}:${s.toString().padStart(2, '0')}`;
+		}
 
         function PlayVideo(VideoUrl) {
             hideError();
@@ -61,11 +85,16 @@
                 player.destroy();
                 player = null;
             }
+			
+			const url_b64_hash = b64_md5(VideoUrl);
+			
+			const savedProgress = videoCache[url_b64_hash] || 0;
             
             // 修复：使用传入的 VideoUrl，而不是重新去获取 DOM 里的值
             const config = {
                 id: "mse",
                 url: VideoUrl, 
+				videoId:url_b64_hash,
                 playsinline: true,
                 plugins: [],
                 fluid: true, 
@@ -73,12 +102,13 @@
                 "x5-video-player-fullscreen": "true",
                 download: true,
                 playbackRate: [0.5, 0.75, 1, 1.25, 1.5, 2, 3, 5],
+				defaultPlaybackRate: parseFloat(localStorage.getItem("currentRate") || 1),
 				mobile:{
 					disablePress:false,
 					pressRate: 3
 				},
-                autoplay: false,
-                volume: 0.6
+                autoplay: false, // 既然是主动点击播放，直接开启自动播放体验更好
+                volume: 0.4
             }
             
             // 修复：转为小写后再判断，防止出现 .MP4 或 .M3U8 导致判断失败
@@ -104,6 +134,43 @@
 					
 					// 用我们自定义的 UI 提示用户，告别乱码！
 					showError("🛑 视频加载失败：该链接无访问权限(403)、存在防盗链或已失效。");
+				});
+				player.on('error', (err) => {
+					// 可以在控制台打印一下真实的错误原因，方便你调试
+					console.warn("播放器拦截到错误：", err);
+					
+					// 用我们自定义的 UI 提示用户，告别乱码！
+					showError("🛑 视频加载失败：该链接无访问权限(403)、存在防盗链或已失效。");
+				});
+				// 播放器事件监听
+				player.on('timeupdate', () => {
+				  // 每5秒保存一次进度，避免频繁写入
+				  const currentTime = Math.floor(player.currentTime);
+				  if (currentTime % 5 === 0) {
+				    saveVideoProgress(player.config.videoId, currentTime);
+				  }
+				});
+				
+				player.on('ratechange', () => {
+					const currentRate = player.playbackRate;
+					localStorage.setItem("currentRate", currentRate);
+				});
+				
+				// 播放器准备好后，跳转到上次的进度
+				player.on('loadeddata', () => {
+				  // 如果保存的进度大于0，且不是视频末尾（预留最后10秒不跳转）
+				  if (savedProgress > 0 && savedProgress < player.duration - 10) {
+				    player.currentTime = savedProgress;
+				    
+				    // 可选：显示提示
+				    console.log(`已跳转到上次播放位置：${formatTime(savedProgress)}`);
+				  }
+				});
+				
+				// 视频结束时清除该视频的进度
+				player.on('ended', () => {
+				  delete videoCache[player.config.videoId];
+				  localStorage.setItem('.cache', JSON.stringify(videoCache));
 				});
             } catch (err) {
                 showError("播放器初始化失败，请检查视频地址是否有效。");
@@ -149,4 +216,3 @@
     </script>
 </body>
 </html>
-
